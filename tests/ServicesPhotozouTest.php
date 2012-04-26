@@ -41,11 +41,18 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
             '__r__.jpg',
         );
 
-        $result = array();
         foreach ($test_words as $word) {
             $ext = $photozou->getFileExt($word);
             $this->assertEquals($ext, 'jpg');
         }
     }
-}
 
+    public function testUserInfo()
+    {
+        $photozou = new Services_Photozou($this->user, $this->password);
+        $result = $photozou->user_info(array('user_id' => '2'));
+
+        $this->assertEquals($result['profile_url'] === 'http://photozou.jp/user/top/2');
+    }
+
+}
