@@ -50,9 +50,35 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
     public function testUserInfo()
     {
         $photozou = new Services_Photozou($this->user, $this->password);
-        $result = $photozou->user_info(array('user_id' => '2'));
 
-        $this->assertEquals($result['profile_url'] === 'http://photozou.jp/user/top/2');
+        $result = $photozou->user_info(array('user_id' => '2'));
+        $this->assertEquals($result['profile_url'], 'http://photozou.jp/user/top/2');
+
+        $result = $photozou->user_info(2);
+        $this->assertEquals($result['profile_url'], 'http://photozou.jp/user/top/2');
+    }
+
+    public function testPhotoInfo()
+    {
+        $photozou = new Services_Photozou($this->user, $this->password);
+        $result = $photozou->photo_list_public(
+            array(
+                'type' => 'cc',
+                'license' => 'by',
+                //'user_id' => '44520',
+                'limit' => '1'
+            )
+        );
+
+        $this->assertFalse(PEAR::isError($result));
+
+        $photo = current($result);
+        $photo2 = $photozou->photo_info($photo['photo_id']);
+
+        unset($photo['view_num']);
+        foreach ($photo as $key => $value) {
+            $this->assertEquals($value, $photo2[$key]);
+        }
     }
 
 }
