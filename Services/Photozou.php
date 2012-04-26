@@ -2,9 +2,7 @@
 /**
  * Photozou.php
  *
- * @author halt feits <halt.feits at gmail.com>
  * @package Services_Photozou
- * @see docs/changelog
  */
 
 require_once 'HTTP/Request.php';
@@ -12,15 +10,12 @@ require_once 'HTTP/Request.php';
 /**
  * Services_Photozou
  *
- * @author halt feits <halt.feits at gmail.com>
  * @package Services_Photozou
  */
 class Services_Photozou
 {
     var $api_url = "http://api.photozou.jp/rest/";
-
     var $username;
-
     var $password;
     
     /**
@@ -747,4 +742,4 @@ class Services_Photozou
     }
 
 }
-?>
+
