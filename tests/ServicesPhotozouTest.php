@@ -30,5 +30,22 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
         );
         $this->assertTrue(is_array($result));
     }
+
+    public function testGetFileExt()
+    {
+        $photozou = new Services_Photozou($this->user, $this->password);
+        $test_words = array(
+            'test.jpg',
+            'test.jpg.jpg',
+            'a/b/c.jpg',
+            '__r__.jpg',
+        );
+
+        $result = array();
+        foreach ($test_words as $word) {
+            $ext = $photozou->getFileExt($word);
+            $this->assertEquals($ext, 'jpg');
+        }
+    }
 }
 
