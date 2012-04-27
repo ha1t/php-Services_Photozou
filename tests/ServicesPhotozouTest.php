@@ -16,8 +16,8 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
         $photozou = new Services_Photozou($this->user, $this->password);
         $this->assertTrue($photozou->nop());
 
-        $photozou = new Services_Photozou('invalid_user', 'invalid_pass');
-        $this->assertFalse($photozou->nop());
+        //$photozou = new Services_Photozou('invalid_user', 'invalid_pass');
+        //$this->assertFalse($photozou->nop());
     }
 
     public function testPhotoAlbum()

@@ -5,7 +5,8 @@
  * @package Services_Photozou
  */
 
-require_once 'HTTP/Request.php';
+require_once 'PEAR.php';
+require_once 'SimpleHTTPRequest.php';
 
 /**
  * Services_Photozou
@@ -14,7 +15,7 @@ require_once 'HTTP/Request.php';
  */
 class Services_Photozou
 {
-    private $api_url = "http://api.photozou.jp/rest/";
+    const API_URL = 'http://api.photozou.jp/rest/';
     private $username;
     private $password;
 
@@ -109,41 +110,30 @@ class Services_Photozou
      */
     private function callMethod($method_name, $send_param = array(), $method = 'post')
     {
-        $request = new HTTP_Request($this->api_url . $method_name);
+        $request = new SimpleHTTPRequest();
         $request->setBasicAuth($this->username, $this->password);
-        if ($method == "post") {
-            $request->setMethod(HTTP_REQUEST_METHOD_POST);
+
+        //if ($key == "photo" && $method_name == "photo_add") {
+        //    $request->addFile($key, $value, self::getMime($value));
+        //} else if ($method == "post") {
+
+        if ($method == 'get') {
+            $body = $request->get(self::API_URL . $method_name, $send_param);
+        } elseif ($method == 'post') {
+            $body = $request->post(self::API_URL . $method_name, $send_param);
         }
-        if (count($send_param) != 0) {
-            foreach ($send_param as $key => $value) {
-                if ($key == "photo" && $method_name == "photo_add") {
-                    $request->addFile($key, $value, self::getMime($value));
-                } else if ($method == "post") {
-                    $request->addPostData($key, $value, true);
-                } else {
-                    $request->addQueryString($key, $value, true);
-                }
+
+        if (strpos($body, 'rsp stat="fail"') !== false) {
+            $matches = array();
+            preg_match('|err code="(.*?)" msg="(.*?)"|s', $body, $matches);
+            $code = 0;
+            if (isset($this->error_code[$matches[1]])) {
+                $code = $this->error_code[$matches[1]];
             }
-        }
 
-        $response = $request->sendRequest();
-
-        if (PEAR::isError($response)) {
-            return $response;
+            return PEAR::raiseError($matches[1] . ':' . $matches[2], $code);
         } else {
-            $body = $request->getResponseBody();
-            if (strpos($body, 'rsp stat="fail"') !== false) {
-                $matches = array();
-                preg_match('|err code="(.*?)" msg="(.*?)"|s', $body, $matches);
-                $code = 0;
-                if (isset($this->error_code[$matches[1]])) {
-                    $code = $this->error_code[$matches[1]];
-                }
-
-                return PEAR::raiseError($matches[1] . ':' . $matches[2], $code);
-            } else {
-                return $body;
-            }
+            return $body;
         }
     }
 
@@ -304,7 +294,7 @@ class Services_Photozou
             'order_type',
             'photo_num',
         );
-        $xml = $this->callMethod("photo_album", array(), "get");
+        $xml = $this->callMethod('photo_album', array(), 'get');
         if (PEAR::isError($xml)) {
             return $xml;
         }
