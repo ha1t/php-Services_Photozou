@@ -39,6 +39,8 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
 
     public function testGetFileExt()
     {
+        $ref = new ReflectionMethod('Services_Photozou', 'getFileExt');
+        $ref->setAccessible(true);
         $photozou = new Services_Photozou($this->user, $this->password);
         $test_words = array(
             'test.jpg',
@@ -48,8 +50,7 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
         );
 
         foreach ($test_words as $word) {
-            $ext = $photozou->getFileExt($word);
-            $this->assertEquals($ext, 'jpg');
+            $this->assertEquals('jpg', $ref->invoke($photozou, $word));
         }
     }
 
