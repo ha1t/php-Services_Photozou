@@ -14,14 +14,15 @@ require_once 'HTTP/Request.php';
  */
 class Services_Photozou
 {
-    var $api_url = "http://api.photozou.jp/rest/";
-    var $username;
-    var $password;
-    
+    private $api_url = "http://api.photozou.jp/rest/";
+    private $username;
+    private $password;
+
     /**
      * @see http://photozou.jp/basic/api_error
+     * TODO: constにする
      */
-    var $error_code = array(
+    public $error_code = array(
         'INVALID_DATE'          =>  0,
         'INVALID_EMAIL_ADDRESS' =>  1,
         'INVALID_ID'            =>  2,
@@ -41,25 +42,13 @@ class Services_Photozou
         'ERROR_UNKNOWN'         => 16,
     );
 
-    /**
-     * Services_Photozou
-     *
-     * @access public
-     * @param string $username
-     * @param string $password
-     */
-    function Services_Photozou($username, $password)
+    public function __construct($username, $password)
     {
         $this->username = $username;
         $this->password = $password;
     }
 
-    /**
-     * getFileExt
-     *
-     * @access protected
-     */
-    function getFileExt($filename)
+    private static function getFileExt($filename)
     {
         $ext = "";
         $filename = basename($filename);
@@ -77,14 +66,9 @@ class Services_Photozou
         return $ext;
     }
 
-    /**
-     * getMine
-     *
-     * @access protected
-     */
-    function getMime($filename)
+    private static function getMime($filename)
     {
-        $ext = $this->getFileExt($filename);
+        $ext = self::getFileExt($filename);
         switch ($ext) {
             case 'mpeg' :
                 $mime = 'video/mpeg';
@@ -123,7 +107,7 @@ class Services_Photozou
      * @param string $method
      * @return string result XML data
      */
-    function callMethod($method_name, $send_param = array(), $method = 'post')
+    private function callMethod($method_name, $send_param = array(), $method = 'post')
     {
         $request = new HTTP_Request($this->api_url . $method_name);
         $request->setBasicAuth($this->username, $this->password);
@@ -133,7 +117,7 @@ class Services_Photozou
         if (count($send_param) != 0) {
             foreach ($send_param as $key => $value) {
                 if ($key == "photo" && $method_name == "photo_add") {
-                    $request->addFile($key, $value, $this->getMime($value));
+                    $request->addFile($key, $value, self::getMime($value));
                 } else if ($method == "post") {
                     $request->addPostData($key, $value, true);
                 } else {
@@ -162,17 +146,11 @@ class Services_Photozou
             }
         }
     }
-    
-    /**
-     * nop
-     *
-     * @access public
-     * @return bool
-     */
-    function nop()
+
+    public function nop()
     {
         $xml = $this->callMethod("nop");
- 
+
         if (strpos($xml, 'stat="ok"') !== false) {
             return true;
         } else {
@@ -214,7 +192,7 @@ class Services_Photozou
      * day
      * 日付の'日'を指定します。 
      */
-    function photo_add($params)
+    public function photo_add($params)
     {
         $tags = array(
             'photo_id',
@@ -225,8 +203,8 @@ class Services_Photozou
         if (PEAR::isError($xml)) {
             return $xml;
         }
- 
-        return $this->parseXML($xml, $tags);
+
+        return self::parseXML($xml, $tags);
     }
 
     /**
@@ -284,7 +262,7 @@ class Services_Photozou
      * 'share'の場合は他の人が同一条件化で配付する場合のみ変更を許可します。 
      *
      */
-    function photo_add_album($params)
+    public function photo_add_album($params)
     {
         $tags = array("album_id");
 
@@ -292,17 +270,16 @@ class Services_Photozou
         if (PEAR::isError($xml)) {
             return $xml;
         }
- 
-        return $this->parseXML($xml, $tags);
+
+        return self::parseXML($xml, $tags);
     }
-    
+
     /**
      * photo_add_tag
      *
-     * @access public
-     * @todo not implement
+     * @TODO implement me
      */
-    function photo_add_tag($params)
+    public function photo_add_tag($params)
     {
         $xml = $this->callMethod("photo_add_tag", $params, "post");
         if (PEAR::isError($xml)) {
@@ -312,10 +289,8 @@ class Services_Photozou
 
     /**
      * photo_album
-     *
-     * @access public
      */
-    function photo_album()
+    public function photo_album()
     {
         $result = array();
         $tags = array(
@@ -334,9 +309,9 @@ class Services_Photozou
             return $xml;
         }
 
-        $match = $this->getBlock($xml, "album");
+        $match = self::getBlock($xml, "album");
         foreach ($match as $item) {
-            $result[] = $this->parseXML($item, $tags);
+            $result[] = self::parseXML($item, $tags);
         }
 
         return $result;
@@ -345,9 +320,8 @@ class Services_Photozou
     /**
      * photo_comment
      *
-     * @access public
      */
-    function photo_comment($params)
+    public function photo_comment($params)
     {
         $result = array();
         $tags = array(
@@ -362,10 +336,10 @@ class Services_Photozou
             return $xml;
         }
 
-        $list = $this->getBlock($xml, "photo_comment");
+        $list = self::getBlock($xml, "photo_comment");
 
         foreach ($list as $block) {
-            $result[] = $this->parseXML($block, $tags);
+            $result[] = self::parseXML($block, $tags);
         }
 
         return $result;
@@ -427,14 +401,14 @@ class Services_Photozou
      * 'share'の場合は他の人が同一条件化で配付する場合のみ変更を許可します。 
      *
      */
-    function photo_edit_album($params)
+    public function photo_edit_album($params)
     {
         $xml = $this->callMethod("photo_edit_album", $params, "post");
         if (PEAR::isError($xml)) {
             return $xml;
         }
- 
-        return $this->parseXML($xml, array());
+
+        return self::parseXML($xml, array());
     }
 
     /**
@@ -444,7 +418,7 @@ class Services_Photozou
      * @param int $photo_id
      * @return array
      */
-    function photo_info($photo_id)
+    public function photo_info($photo_id)
     {
         if (!is_numeric($photo_id)) {
             return false;
@@ -471,20 +445,17 @@ class Services_Photozou
             'large_tag',
             'medium_tag',
         );
-        
+
         $xml = $this->callMethod("photo_info", array('photo_id' => $photo_id), "get");
         if (PEAR::isError($xml)) {
             return $xml;
         }
 
-        return $this->parseXML($xml, $tags);
+        return self::parseXML($xml, $tags);
     }
 
     /**
      * photo_list_public
-     *
-     * @access public
-     *
      *
      * type(必須)
      * 写真/動画一覧の取得
@@ -522,7 +493,7 @@ class Services_Photozou
      * limit
      * 取得する一覧の上限を指定します。(省略時100件、最大1000件) 
      */
-    function photo_list_public($param)
+    public function photo_list_public($param)
     {
         $results = array();
         $tags = array(
@@ -552,9 +523,9 @@ class Services_Photozou
             return $xml;
         }
 
-        $list = $this->getBlock($xml, "photo");
+        $list = self::getBlock($xml, "photo");
         foreach ($list as $photo) {
-            $results[] = $this->parseXML($photo, $tags);
+            $results[] = self::parseXML($photo, $tags);
         }
 
         return $results;
@@ -563,9 +534,8 @@ class Services_Photozou
     /**
      * user_info
      *
-     * @access public
      */
-    function user_info($param)
+    public function user_info($param)
     {
         $result = array();
         $tags = array(
@@ -586,9 +556,9 @@ class Services_Photozou
             return $xml;
         }
 
-        $list = $this->getBlock($xml, "user");
+        $list = self::getBlock($xml, "user");
         foreach ($list as $photo) {
-            $result = $this->parseXML($photo, $tags);
+            $result = self::parseXML($photo, $tags);
         }
 
         return $result;
@@ -597,9 +567,8 @@ class Services_Photozou
     /**
      * user_group
      *
-     * @access public
      */
-    function user_group()
+    public function user_group()
     {
         $tags = array(
             'group_id',
@@ -611,8 +580,8 @@ class Services_Photozou
         if (PEAR::isError($xml)) {
             return $xml;
         }
- 
-        return $this->parseXML($xml, $tags);
+
+        return self::parseXML($xml, $tags);
     }
 
     /**
@@ -663,7 +632,7 @@ class Services_Photozou
      * offset
      * 検索のオフセットを指定します。(省略時: 0) 
      */
-    function search_public($params)
+    public function search_public($params)
     {
         $result = array();
         $tags = array(
@@ -683,16 +652,16 @@ class Services_Photozou
             'large_tag',
             'medium_tag'
         );
-        
+
         $xml = $this->callMethod("search_public", $params, "get");
         if (PEAR::isError($xml)) {
             return $xml;
         }
 
-        $list = $this->getBlock($xml, "photo");
+        $list = self::getBlock($xml, "photo");
 
         foreach ($list as $block) {
-            $result[] = $this->parseXML($block, $tags);
+            $result[] = self::parseXML($block, $tags);
         }
 
         return $result;
@@ -701,10 +670,8 @@ class Services_Photozou
 
     /**
      * getBlock
-     *
-     * @access private
      */
-    function getBlock($xml, $block_name)
+    private static function getBlock($xml, $block_name)
     {
         $xml = str_replace("\n", '', $xml);
         $pattern = "|<{$block_name}>(.*?)</{$block_name}>|s";
@@ -715,10 +682,8 @@ class Services_Photozou
 
     /**
      * parseXML
-     *
-     * @access private
      */
-    function parseXML($xml, $parse_param)
+    private static function parseXML($xml, $parse_param)
     {
         $result = array();
         $xml = str_replace("\n", '', $xml);
