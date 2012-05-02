@@ -391,7 +391,7 @@ class Services_Photozou
     public function photo_info($photo_id)
     {
         if (!is_numeric($photo_id)) {
-            return false;
+            throw new InvalidArgumentException;
         }
 
         $tags = array(
