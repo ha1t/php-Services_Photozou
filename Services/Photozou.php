@@ -70,29 +70,26 @@ class Services_Photozou
     {
         $ext = self::getFileExt($filename);
         switch ($ext) {
-            case 'mpeg' :
-                $mime = 'video/mpeg';
-                break;
-            case 'mpg' :
-                $mime = 'video/mpeg';
-                break;
-            case 'wmv' :
-                $mime = 'video/x-ms-wmx';
-                break;
-            case 'asf' :
-                $mime = 'video/x-ms-asf';
-                break;
-            case 'asx' :
-                $mime = 'video/x-ms-asf';
-                break;
-            case 'avi' :
-                $mime = 'video/avi';
-                break;
-            case 'flv' :
-                $mime = 'video/x-flv';
-                break;
-            default:
-                $mime = 'image/gif';
+        case 'gif' :
+            $mime = 'image/gif';
+            break;
+        case 'jpg' :
+            $mime = 'image/jpeg';
+            break;
+        case 'jpeg' :
+            $mime = 'image/jpeg';
+            break;
+        case 'pjpeg' :
+            $mime = 'image/pjpeg';
+            break;
+        case 'png' :
+            $mime = 'image/png';
+            break;
+        case 'x-png' :
+            $mime = 'image/x-png';
+            break;
+        default:
+            $mime = 'image/gif';
         }
 
         return $mime;
@@ -553,12 +550,6 @@ class Services_Photozou
      * 'photo': 写真
      * 'video': 動画
      * 'all': すべて(省略時) 
-     *
-     * order_type
-     * 検索結果の並び順。
-     * 'date', 'favorite' のうちから指定します。
-     * 'date': 新着順(省略時)
-     * 'favorite': お気に入り順 
      *
      * keyword
      * タイトルに含まれるキーワードを指定します。
