@@ -5,7 +5,6 @@
  * @package Services_Photozou
  */
 
-require_once 'PEAR.php';
 require_once 'SimpleHTTPRequest.php';
 
 /**
@@ -113,28 +112,28 @@ class Services_Photozou
         $request = new SimpleHTTPRequest();
         $request->setBasicAuth($this->username, $this->password);
 
-        //if ($key == "photo" && $method_name == "photo_add") {
-        //    $request->addFile($key, $value, self::getMime($value));
-        //} else if ($method == "post") {
-
-        if ($method == 'get') {
-            $body = $request->get(self::API_URL . $method_name, $send_param);
-        } elseif ($method == 'post') {
-            $body = $request->post(self::API_URL . $method_name, $send_param);
+        if (isset($send_param['photo']) && $method_name == "photo_add") {
+            $request->addFile('photo', $send_param['photo'], self::getMime($send_param['photo']));
         }
 
-        if (strpos($body, 'rsp stat="fail"') !== false) {
+        if ($method == 'get') {
+            $xml = $request->get(self::API_URL . $method_name, $send_param);
+        } elseif ($method == 'post') {
+            $xml = $request->post(self::API_URL . $method_name, $send_param);
+        }
+
+        if (strpos($xml, 'rsp stat="fail"') !== false) {
             $matches = array();
-            preg_match('|err code="(.*?)" msg="(.*?)"|s', $body, $matches);
+            preg_match('|err code="(.*?)" msg="(.*?)"|s', $xml, $matches);
             $code = 0;
             if (isset($this->error_code[$matches[1]])) {
                 $code = $this->error_code[$matches[1]];
             }
 
-            return PEAR::raiseError($matches[1] . ':' . $matches[2], $code);
-        } else {
-            return $body;
+            throw new ErrorException($matches[1] . ':' . $matches[2] . $code);
         }
+
+        return $xml;
     }
 
     public function nop()
@@ -190,9 +189,6 @@ class Services_Photozou
             'medium_tag'
         );
         $xml = $this->callMethod("photo_add", $params, 'post');
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
         return self::parseXML($xml, $tags);
     }
@@ -257,9 +253,6 @@ class Services_Photozou
         $tags = array("album_id");
 
         $xml = $this->callMethod("photo_add_album", $params, "post");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
         return self::parseXML($xml, $tags);
     }
@@ -272,9 +265,6 @@ class Services_Photozou
     public function photo_add_tag($params)
     {
         $xml = $this->callMethod("photo_add_tag", $params, "post");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
     }
 
     /**
@@ -295,9 +285,6 @@ class Services_Photozou
             'photo_num',
         );
         $xml = $this->callMethod('photo_album', array(), 'get');
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
         $match = self::getBlock($xml, "album");
         foreach ($match as $item) {
@@ -322,9 +309,6 @@ class Services_Photozou
         );
 
         $xml = $this->callMethod("photo_comment", $params, "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
         $list = self::getBlock($xml, "photo_comment");
 
@@ -394,10 +378,6 @@ class Services_Photozou
     public function photo_edit_album($params)
     {
         $xml = $this->callMethod("photo_edit_album", $params, "post");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
-
         return self::parseXML($xml, array());
     }
 
@@ -437,9 +417,6 @@ class Services_Photozou
         );
 
         $xml = $this->callMethod("photo_info", array('photo_id' => $photo_id), "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
         return self::parseXML($xml, $tags);
     }
@@ -509,9 +486,6 @@ class Services_Photozou
         );
 
         $xml = $this->callMethod("photo_list_public", $param, "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
         $list = self::getBlock($xml, "photo");
         foreach ($list as $photo) {
@@ -542,9 +516,6 @@ class Services_Photozou
         }
 
         $xml = $this->callMethod("user_info", $param, "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
         $list = self::getBlock($xml, "user");
         foreach ($list as $photo) {
@@ -567,9 +538,6 @@ class Services_Photozou
         );
 
         $xml = $this->callMethod("user_group", array(), "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
         return self::parseXML($xml, $tags);
     }
@@ -644,9 +612,6 @@ class Services_Photozou
         );
 
         $xml = $this->callMethod("search_public", $params, "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
         $list = self::getBlock($xml, "photo");
 

@@ -80,7 +80,7 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
             )
         );
 
-        $this->assertFalse(PEAR::isError($result));
+        $this->assertTrue(is_array($result));
 
         $photo = current($result);
         $photo2 = $photozou->photo_info($photo['photo_id']);
