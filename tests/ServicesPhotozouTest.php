@@ -20,10 +20,35 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
         //$this->assertFalse($photozou->nop());
     }
 
+    public function testPhotoAdd()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testPhotoAddAlbum()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testPhotoAddTag()
+    {
+        $this->markTestIncomplete();
+    }
+
     public function testPhotoAlbum()
     {
         $photozou = new Services_Photozou($this->user, $this->password);
         $this->assertTrue(is_array($photozou->photo_album()));
+    }
+
+    public function testPhotoComment()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testPhotoEditAlbum()
+    {
+        $this->markTestIncomplete();
     }
 
     public function testPhotoListPublic()
@@ -89,6 +114,16 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
         foreach ($photo as $key => $value) {
             $this->assertEquals($value, $photo2[$key]);
         }
+    }
+
+    public function testUserGroup()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testSearchPublic()
+    {
+        $this->markTestIncomplete();
     }
 
 }
