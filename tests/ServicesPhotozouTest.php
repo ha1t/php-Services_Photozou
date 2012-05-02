@@ -116,9 +116,22 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
         }
     }
 
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testPhotoInfoFail()
+    {
+        $fail_id = 'fail_id';
+        $photozou = new Services_Photozou($this->user, $this->password);
+        $photozou->photo_info($fail_id);
+    }
+
     public function testUserGroup()
     {
-        $this->markTestIncomplete();
+        $photozou = new Services_Photozou($this->user, $this->password);
+        $user_groups = $photozou->user_group();
+        $user_group = current($user_groups);
+        $this->assertTrue(isset($user_group['group_id']));
     }
 
     public function testSearchPublic()
