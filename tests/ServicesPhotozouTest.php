@@ -145,8 +145,11 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
     {
         $photozou = new Services_Photozou($this->user, $this->password);
         $user_groups = $photozou->user_group();
-        $user_group = current($user_groups);
-        $this->assertTrue(isset($user_group['group_id']));
+
+        foreach ($user_groups as $user_group) {
+            $this->assertTrue(is_array($user_group));
+            $this->assertTrue(isset($user_group['group_id']));
+        }
     }
 
     public function testSearchPublic()
