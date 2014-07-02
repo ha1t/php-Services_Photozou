@@ -114,11 +114,10 @@ class Services_Photozou
             $response = $client->get($method_name, ['query' => $send_param]);
         } elseif ($method == 'post') {
             if (isset($send_param['photo']) && $method_name == "photo_add") {
-                $request->addFile('photo', $send_param['photo'], self::getMime($send_param['photo']));
-                $send_param['photo'] = \GuzzleHttp\Post\PostFile('photo', file_get_contents($send_param['photo']), $send_param['photo']);
+                $send_param['photo'] = new \GuzzleHttp\Post\PostFile('photo', fopen($send_param['photo'], 'r'), $send_param['photo']);
             }
 
-            $response = $client->post($method_name, $send_param);
+            $response = $client->post($method_name, ['body' => $send_param]);
         }
 
         $xml = (string)$response->getBody();
