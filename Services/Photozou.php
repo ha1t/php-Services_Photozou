@@ -5,8 +5,6 @@
  * @package Services_Photozou
  */
 
-require_once 'vendor/autoload.php';
-
 /**
  * Services_Photozou
  *
