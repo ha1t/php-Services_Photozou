@@ -1,5 +1,5 @@
 {
-    "name": "ha1t/php-Services-Photozou",
+    "name": "ha1t/php-services-photozou",
     "type": "library",
     "require": {
         "php": ">=5.4",
