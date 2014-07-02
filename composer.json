@@ -4,5 +4,8 @@
     "require": {
         "php": ">=5.4",
         "guzzlehttp/guzzle": "~4"
+    },
+    "autoload": {
+        "psr-0": { "Services": "." }
     }
 }
