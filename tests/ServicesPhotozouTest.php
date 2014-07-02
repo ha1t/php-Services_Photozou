@@ -1,5 +1,4 @@
 <?php
-require_once 'Services/Photozou.php';
 
 class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
 {

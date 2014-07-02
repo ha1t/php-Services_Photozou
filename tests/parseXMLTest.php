@@ -1,6 +1,4 @@
 <?php
-require_once 'Services/Photozou.php';
-
 class parseXMLTest extends PHPUnit_Framework_TestCase
 {
     public function testParseUserGroup()
