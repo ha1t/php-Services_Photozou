@@ -103,7 +103,7 @@ class Services_Photozou
      * @param string $method
      * @return string result XML data
      */
-    private function callMethod($method_name, $send_param = [], $method = 'post')
+    private function callMethod($method_name, array $send_param = [], $method = 'post')
     {
         $client = new GuzzleHttp\Client([
             'base_url' => self::API_URL,
@@ -120,8 +120,6 @@ class Services_Photozou
             }
 
             $response = $client->post($method_name, $send_param);
-
-            //$xml = SimpleHTTPRequest::post(self::API_URL . $method_name, $send_param, array('username' => $this->username, 'password' => $this->password));
         }
 
         $xml = (string)$response->getBody();
@@ -185,7 +183,7 @@ class Services_Photozou
      * day
      * 日付の'日'を指定します。 
      */
-    public function photo_add($params)
+    public function photo_add(array $params)
     {
         $tags = array(
             'photo_id',
@@ -254,7 +252,7 @@ class Services_Photozou
      * 'share'の場合は他の人が同一条件化で配付する場合のみ変更を許可します。
      *
      */
-    public function photo_add_album($params)
+    public function photo_add_album(array $params)
     {
         $tags = array('album_id');
 
@@ -268,7 +266,7 @@ class Services_Photozou
      *
      * @TODO implement me
      */
-    public function photo_add_tag($params)
+    public function photo_add_tag(array $params)
     {
         $xml = $this->callMethod("photo_add_tag", $params, "post");
     }
@@ -304,7 +302,7 @@ class Services_Photozou
      * photo_comment
      *
      */
-    public function photo_comment($params)
+    public function photo_comment(array $params)
     {
         $result = array();
         $tags = array(
@@ -381,7 +379,7 @@ class Services_Photozou
      * 'share'の場合は他の人が同一条件化で配付する場合のみ変更を許可します。 
      *
      */
-    public function photo_edit_album($params)
+    public function photo_edit_album(array $params)
     {
         $xml = $this->callMethod('photo_edit_album', $params, 'post');
         return self::parseXML($xml, array());
@@ -466,7 +464,7 @@ class Services_Photozou
      * limit
      * 取得する一覧の上限を指定します。(省略時100件、最大1000件) 
      */
-    public function photo_list_public($param)
+    public function photo_list_public(array $param)
     {
         $results = array();
         $tags = array(
@@ -505,7 +503,7 @@ class Services_Photozou
      * user_info
      *
      */
-    public function user_info($param)
+    public function user_info(array $param)
     {
         $result = array();
         $tags = array(
@@ -597,7 +595,7 @@ class Services_Photozou
      * offset
      * 検索のオフセットを指定します。(省略時: 0) 
      */
-    public function search_public($params)
+    public function search_public(array $params)
     {
         $result = array();
         $tags = array(
