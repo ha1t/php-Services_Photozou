@@ -5,8 +5,6 @@
  * @package Services_Photozou
  */
 
-require_once 'HTTP/Request.php';
-
 /**
  * Services_Photozou
  *
@@ -14,14 +12,15 @@ require_once 'HTTP/Request.php';
  */
 class Services_Photozou
 {
-    var $api_url = "http://api.photozou.jp/rest/";
-    var $username;
-    var $password;
-    
+    const API_URL = 'http://api.photozou.jp/rest/';
+    private $username;
+    private $password;
+
     /**
      * @see http://photozou.jp/basic/api_error
+     * TODO: constにする
      */
-    var $error_code = array(
+    public $error_code = array(
         'INVALID_DATE'          =>  0,
         'INVALID_EMAIL_ADDRESS' =>  1,
         'INVALID_ID'            =>  2,
@@ -41,25 +40,13 @@ class Services_Photozou
         'ERROR_UNKNOWN'         => 16,
     );
 
-    /**
-     * Services_Photozou
-     *
-     * @access public
-     * @param string $username
-     * @param string $password
-     */
-    function Services_Photozou($username, $password)
+    public function __construct($username, $password)
     {
         $this->username = $username;
         $this->password = $password;
     }
 
-    /**
-     * getFileExt
-     *
-     * @access protected
-     */
-    function getFileExt($filename)
+    private static function getFileExt($filename)
     {
         $ext = "";
         $filename = basename($filename);
@@ -77,38 +64,30 @@ class Services_Photozou
         return $ext;
     }
 
-    /**
-     * getMine
-     *
-     * @access protected
-     */
-    function getMime($filename)
+    private static function getMime($filename)
     {
-        $ext = $this->getFileExt($filename);
+        $ext = self::getFileExt($filename);
         switch ($ext) {
-            case 'mpeg' :
-                $mime = 'video/mpeg';
-                break;
-            case 'mpg' :
-                $mime = 'video/mpeg';
-                break;
-            case 'wmv' :
-                $mime = 'video/x-ms-wmx';
-                break;
-            case 'asf' :
-                $mime = 'video/x-ms-asf';
-                break;
-            case 'asx' :
-                $mime = 'video/x-ms-asf';
-                break;
-            case 'avi' :
-                $mime = 'video/avi';
-                break;
-            case 'flv' :
-                $mime = 'video/x-flv';
-                break;
-            default:
-                $mime = 'image/gif';
+        case 'gif' :
+            $mime = 'image/gif';
+            break;
+        case 'jpg' :
+            $mime = 'image/jpeg';
+            break;
+        case 'jpeg' :
+            $mime = 'image/jpeg';
+            break;
+        case 'pjpeg' :
+            $mime = 'image/pjpeg';
+            break;
+        case 'png' :
+            $mime = 'image/png';
+            break;
+        case 'x-png' :
+            $mime = 'image/x-png';
+            break;
+        default:
+            $mime = 'image/gif';
         }
 
         return $mime;
@@ -117,62 +96,50 @@ class Services_Photozou
     /**
      * callMethod
      *
-     * @access private
      * @param string $method_name
      * @param array  $send_param
      * @param string $method
      * @return string result XML data
      */
-    function callMethod($method_name, $send_param = array(), $method = 'post')
+    private function callMethod($method_name, array $send_param = [], $method = 'post')
     {
-        $request = new HTTP_Request($this->api_url . $method_name);
-        $request->setBasicAuth($this->username, $this->password);
-        if ($method == "post") {
-            $request->setMethod(HTTP_REQUEST_METHOD_POST);
-        }
-        if (count($send_param) != 0) {
-            foreach ($send_param as $key => $value) {
-                if ($key == "photo" && $method_name == "photo_add") {
-                    $request->addFile($key, $value, $this->getMime($value));
-                } else if ($method == "post") {
-                    $request->addPostData($key, $value, true);
-                } else {
-                    $request->addQueryString($key, $value, true);
-                }
+        $client = new \GuzzleHttp\Client([
+            'base_url' => self::API_URL,
+            'defaults' => [
+                'auth'    => [$this->username, $this->password],
+            ]
+        ]);
+
+        if ($method == 'get') {
+            $response = $client->get($method_name, ['query' => $send_param]);
+        } elseif ($method == 'post') {
+            if (isset($send_param['photo']) && $method_name == "photo_add") {
+                $send_param['photo'] = new \GuzzleHttp\Post\PostFile('photo', fopen($send_param['photo'], 'r'), $send_param['photo']);
             }
+
+            $response = $client->post($method_name, ['body' => $send_param]);
         }
 
-        $response = $request->sendRequest();
+        $xml = (string)$response->getBody();
 
-        if (PEAR::isError($response)) {
-            return $response;
-        } else {
-            $body = $request->getResponseBody();
-            if (strpos($body, 'rsp stat="fail"') !== false) {
-                $matches = array();
-                preg_match('|err code="(.*?)" msg="(.*?)"|s', $body, $matches);
-                $code = 0;
-                if (isset($this->error_code[$matches[1]])) {
-                    $code = $this->error_code[$matches[1]];
-                }
-
-                return PEAR::raiseError($matches[1] . ':' . $matches[2], $code);
-            } else {
-                return $body;
+        if (strpos($xml, 'rsp stat="fail"') !== false) {
+            $matches = array();
+            preg_match('|err code="(.*?)" msg="(.*?)"|s', $xml, $matches);
+            $code = 0;
+            if (isset($this->error_code[$matches[1]])) {
+                $code = $this->error_code[$matches[1]];
             }
+
+            throw new ErrorException($matches[1] . ':' . $matches[2] . $code);
         }
+
+        return $xml;
     }
-    
-    /**
-     * nop
-     *
-     * @access public
-     * @return bool
-     */
-    function nop()
+
+    public function nop()
     {
         $xml = $this->callMethod("nop");
- 
+
         if (strpos($xml, 'stat="ok"') !== false) {
             return true;
         } else {
@@ -190,7 +157,7 @@ class Services_Photozou
      * アルバムID
      *
      * photo_title
-     * 写真/動画タイトル
+     * 写真タイトル
      *
      * tag
      * 写真に追加するタグ
@@ -214,7 +181,7 @@ class Services_Photozou
      * day
      * 日付の'日'を指定します。 
      */
-    function photo_add($params)
+    public function photo_add(array $params)
     {
         $tags = array(
             'photo_id',
@@ -222,100 +189,90 @@ class Services_Photozou
             'medium_tag'
         );
         $xml = $this->callMethod("photo_add", $params, 'post');
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
- 
-        return $this->parseXML($xml, $tags);
+
+        return self::parseXML($xml, $tags);
     }
 
     /**
      * photo_add_album
      *
-     * @access public
-     *
      * name(必須)
-     * アルバム名
+     * アルバム名（最大40文字）
      *
      * description
-     * アルバムの説明
+     * アルバムの説明（最大1000文字）
+     *
+     * cover
+     * アルバムの表紙の写真データ(最大10MB)
      *
      * perm_type
-     * 写真/動画の公開権限を指定します。
+     * 写真の公開権限を指定します。
      * 'allow'(デフォルト), 'deny'の2種類があります。
-     * 'allow'の場合はアクセスを許可し、'deny'の場合はアクセスを拒否します。 
+     * 'allow'の場合はアクセスを許可し、'deny'の場合はアクセスを拒否します。
      *
      * perm_type2
-     * 写真/動画の公開権限の範囲を指定します。
+     * 写真の公開権限の範囲を指定します。
      * 'net'(デフォルト), 'everyone', 'all', 'user_group'の4種類あります。
      * それぞれ次を意味します。
      * 'net': インターネット
      * 'everyone': フォト蔵全体
      * 'all': 友達全員
-     * 'user_group': ユーザーグループ 
+     * 'user_group': ユーザーグループ
      *
-     * perm_id
-     * 'perm_type2'が'user_group'の場合にのみ有効な値です。
-     * ユーザーグループIDを指定します。 
+     * perm_user_id
+     * 'perm_type2' が 'user_group' の場合だけ有効な値です。
+     * 公開する友達のユーザーIDを指定します。
+     * 複数の友達のユーザーIDを指定する場合は、スペース区切りで指定してください。
      *
      * order_type
-     * 写真/動画の並び順です。次の値があります。
+     * 写真の並び順です。次の値があります。
      * 'upload'(デフォルト): アップロード順
      * 'date': 日付順
      * 'comment': コメント順
      * 'file_name': ファイル名順
-     * 値の後に'2'がつくと(例: upload2)逆順になります。 
+     * 値の後に'2'がつくと(例: upload2)逆順になります。
      *
      * copyright_type
      * 著作権タイプを指定します。 'normal'(デフォルト),
      * 'creativecommons'の2種類があります。
      * クリエイティブコモンズによる著作権を設定したい場合に
-     * 'creativecommons'を指定して下さい。 
+     * 'creativecommons'を指定して下さい。
      *
      * copyright_commercial
      * クリエイティブコモンズによる著作権、営利目的での利用を指定します。
      * 'yes'(デフォルト), 'no'の2種類を指定できます。
-     * 'yes'の場合は利用を許可、'no'の場合は利用を許可しません。 
+     * 'yes'の場合は利用を許可、'no'の場合は利用を許可しません。
      *
      * copyright_modification
      * クリエイティブコモンズによる著作権、改変の許可を指定します。
      * 'yes'(デフォルト), 'no', 'share'の3種類を指定できます。
      * 'yes'の場合は改変を許可、'no'の場合は改変を許可しません。
-     * 'share'の場合は他の人が同一条件化で配付する場合のみ変更を許可します。 
+     * 'share'の場合は他の人が同一条件化で配付する場合のみ変更を許可します。
      *
      */
-    function photo_add_album($params)
+    public function photo_add_album(array $params)
     {
-        $tags = array("album_id");
+        $tags = array('album_id');
 
-        $xml = $this->callMethod("photo_add_album", $params, "post");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
- 
-        return $this->parseXML($xml, $tags);
+        $xml = $this->callMethod('photo_add_album', $params, 'post');
+
+        return self::parseXML($xml, $tags);
     }
-    
+
     /**
      * photo_add_tag
      *
-     * @access public
-     * @todo not implement
+     * @TODO implement me
      */
-    function photo_add_tag($params)
+    public function photo_add_tag(array $params)
     {
         $xml = $this->callMethod("photo_add_tag", $params, "post");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
     }
 
     /**
      * photo_album
-     *
-     * @access public
      */
-    function photo_album()
+    public function photo_album()
     {
         $result = array();
         $tags = array(
@@ -329,14 +286,11 @@ class Services_Photozou
             'order_type',
             'photo_num',
         );
-        $xml = $this->callMethod("photo_album", array(), "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
+        $xml = $this->callMethod('photo_album', array(), 'get');
 
-        $match = $this->getBlock($xml, "album");
+        $match = self::getBlock($xml, "album");
         foreach ($match as $item) {
-            $result[] = $this->parseXML($item, $tags);
+            $result[] = self::parseXML($item, $tags);
         }
 
         return $result;
@@ -345,9 +299,8 @@ class Services_Photozou
     /**
      * photo_comment
      *
-     * @access public
      */
-    function photo_comment($params)
+    public function photo_comment(array $params)
     {
         $result = array();
         $tags = array(
@@ -358,14 +311,11 @@ class Services_Photozou
         );
 
         $xml = $this->callMethod("photo_comment", $params, "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
-        $list = $this->getBlock($xml, "photo_comment");
+        $list = self::getBlock($xml, "photo_comment");
 
         foreach ($list as $block) {
-            $result[] = $this->parseXML($block, $tags);
+            $result[] = self::parseXML($block, $tags);
         }
 
         return $result;
@@ -427,14 +377,10 @@ class Services_Photozou
      * 'share'の場合は他の人が同一条件化で配付する場合のみ変更を許可します。 
      *
      */
-    function photo_edit_album($params)
+    public function photo_edit_album(array $params)
     {
-        $xml = $this->callMethod("photo_edit_album", $params, "post");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
- 
-        return $this->parseXML($xml, array());
+        $xml = $this->callMethod('photo_edit_album', $params, 'post');
+        return self::parseXML($xml, array());
     }
 
     /**
@@ -444,10 +390,10 @@ class Services_Photozou
      * @param int $photo_id
      * @return array
      */
-    function photo_info($photo_id)
+    public function photo_info($photo_id)
     {
         if (!is_numeric($photo_id)) {
-            return false;
+            throw new InvalidArgumentException;
         }
 
         $tags = array(
@@ -471,20 +417,14 @@ class Services_Photozou
             'large_tag',
             'medium_tag',
         );
-        
-        $xml = $this->callMethod("photo_info", array('photo_id' => $photo_id), "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
-        return $this->parseXML($xml, $tags);
+        $xml = $this->callMethod("photo_info", array('photo_id' => $photo_id), "get");
+
+        return self::parseXML($xml, $tags);
     }
 
     /**
      * photo_list_public
-     *
-     * @access public
-     *
      *
      * type(必須)
      * 写真/動画一覧の取得
@@ -522,7 +462,7 @@ class Services_Photozou
      * limit
      * 取得する一覧の上限を指定します。(省略時100件、最大1000件) 
      */
-    function photo_list_public($param)
+    public function photo_list_public(array $param)
     {
         $results = array();
         $tags = array(
@@ -548,13 +488,10 @@ class Services_Photozou
         );
 
         $xml = $this->callMethod("photo_list_public", $param, "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
-        $list = $this->getBlock($xml, "photo");
+        $list = self::getBlock($xml, "photo");
         foreach ($list as $photo) {
-            $results[] = $this->parseXML($photo, $tags);
+            $results[] = self::parseXML($photo, $tags);
         }
 
         return $results;
@@ -563,9 +500,8 @@ class Services_Photozou
     /**
      * user_info
      *
-     * @access public
      */
-    function user_info($param)
+    public function user_info($param)
     {
         $result = array();
         $tags = array(
@@ -582,13 +518,10 @@ class Services_Photozou
         }
 
         $xml = $this->callMethod("user_info", $param, "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
-        $list = $this->getBlock($xml, "user");
+        $list = self::getBlock($xml, "user");
         foreach ($list as $photo) {
-            $result = $this->parseXML($photo, $tags);
+            $result = self::parseXML($photo, $tags);
         }
 
         return $result;
@@ -597,9 +530,9 @@ class Services_Photozou
     /**
      * user_group
      *
-     * @access public
+     * 友達グループの一覧を取得します。
      */
-    function user_group()
+    public function user_group()
     {
         $tags = array(
             'group_id',
@@ -608,11 +541,14 @@ class Services_Photozou
         );
 
         $xml = $this->callMethod("user_group", array(), "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
+
+        $result = [];
+        $match = self::getBlock($xml, 'user_group');
+        foreach ($match as $item) {
+            $result[] = self::parseXML($item, $tags);
         }
- 
-        return $this->parseXML($xml, $tags);
+
+        return $result;
     }
 
     /**
@@ -626,12 +562,6 @@ class Services_Photozou
      * 'photo': 写真
      * 'video': 動画
      * 'all': すべて(省略時) 
-     *
-     * order_type
-     * 検索結果の並び順。
-     * 'date', 'favorite' のうちから指定します。
-     * 'date': 新着順(省略時)
-     * 'favorite': お気に入り順 
      *
      * keyword
      * タイトルに含まれるキーワードを指定します。
@@ -663,7 +593,7 @@ class Services_Photozou
      * offset
      * 検索のオフセットを指定します。(省略時: 0) 
      */
-    function search_public($params)
+    public function search_public(array $params)
     {
         $result = array();
         $tags = array(
@@ -683,16 +613,13 @@ class Services_Photozou
             'large_tag',
             'medium_tag'
         );
-        
-        $xml = $this->callMethod("search_public", $params, "get");
-        if (PEAR::isError($xml)) {
-            return $xml;
-        }
 
-        $list = $this->getBlock($xml, "photo");
+        $xml = $this->callMethod("search_public", $params, "get");
+
+        $list = self::getBlock($xml, "photo");
 
         foreach ($list as $block) {
-            $result[] = $this->parseXML($block, $tags);
+            $result[] = self::parseXML($block, $tags);
         }
 
         return $result;
@@ -701,10 +628,8 @@ class Services_Photozou
 
     /**
      * getBlock
-     *
-     * @access private
      */
-    function getBlock($xml, $block_name)
+    private static function getBlock($xml, $block_name)
     {
         $xml = str_replace("\n", '', $xml);
         $pattern = "|<{$block_name}>(.*?)</{$block_name}>|s";
@@ -715,12 +640,10 @@ class Services_Photozou
 
     /**
      * parseXML
-     *
-     * @access private
      */
-    function parseXML($xml, $parse_param)
+    private static function parseXML($xml, array $parse_param)
     {
-        $result = array();
+        $result = [];
         $xml = str_replace("\n", '', $xml);
         foreach ($parse_param as $key) {
             $pattern = "|<{$key}>(.*?)</{$key}>|";
