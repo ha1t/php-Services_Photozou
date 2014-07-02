@@ -1,2 +1,4 @@
 config_my.php
 example_config.php
+composer.lock
+vendor
