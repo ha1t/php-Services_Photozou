@@ -1,5 +1,8 @@
 {
+    "name": "ha1t/php-Services_Photozou",
+    "type": "library",
     "require": {
+        "php": ">=5.4",
         "guzzlehttp/guzzle": "~4"
     }
 }
