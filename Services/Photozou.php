@@ -5,7 +5,7 @@
  * @package Services_Photozou
  */
 
-require_once 'SimpleHTTPRequest.php';
+require_once 'vendor/autoload.php';
 
 /**
  * Services_Photozou
@@ -98,26 +98,33 @@ class Services_Photozou
     /**
      * callMethod
      *
-     * @access private
      * @param string $method_name
      * @param array  $send_param
      * @param string $method
      * @return string result XML data
      */
-    private function callMethod($method_name, $send_param = array(), $method = 'post')
+    private function callMethod($method_name, $send_param = [], $method = 'post')
     {
-        $request = new SimpleHTTPRequest();
-        $request->setBasicAuth($this->username, $this->password);
-
-        if (isset($send_param['photo']) && $method_name == "photo_add") {
-            $request->addFile('photo', $send_param['photo'], self::getMime($send_param['photo']));
-        }
+        $client = new GuzzleHttp\Client([
+            'base_url' => self::API_URL,
+            'defaults' => [
+                'auth'    => [$this->username, $this->password],
+            ]
+        ]);
 
         if ($method == 'get') {
-            $xml = $request->get(self::API_URL . $method_name, $send_param);
+            $response = $client->get($method_name, ['query' => $send_param]);
         } elseif ($method == 'post') {
-            $xml = $request->post(self::API_URL . $method_name, $send_param);
+            if (isset($send_param['photo']) && $method_name == "photo_add") {
+                $request->addFile('photo', $send_param['photo'], self::getMime($send_param['photo']));
+            }
+
+            $response = $client->post($method_name, $send_param);
+
+            //$xml = SimpleHTTPRequest::post(self::API_URL . $method_name, $send_param, array('username' => $this->username, 'password' => $this->password));
         }
+
+        $xml = (string)$response->getBody();
 
         if (strpos($xml, 'rsp stat="fail"') !== false) {
             $matches = array();
@@ -154,7 +161,7 @@ class Services_Photozou
      * アルバムID
      *
      * photo_title
-     * 写真/動画タイトル
+     * 写真タイトル
      *
      * tag
      * 写真に追加するタグ
@@ -193,63 +200,65 @@ class Services_Photozou
     /**
      * photo_add_album
      *
-     * @access public
-     *
      * name(必須)
-     * アルバム名
+     * アルバム名（最大40文字）
      *
      * description
-     * アルバムの説明
+     * アルバムの説明（最大1000文字）
+     *
+     * cover
+     * アルバムの表紙の写真データ(最大10MB)
      *
      * perm_type
-     * 写真/動画の公開権限を指定します。
+     * 写真の公開権限を指定します。
      * 'allow'(デフォルト), 'deny'の2種類があります。
-     * 'allow'の場合はアクセスを許可し、'deny'の場合はアクセスを拒否します。 
+     * 'allow'の場合はアクセスを許可し、'deny'の場合はアクセスを拒否します。
      *
      * perm_type2
-     * 写真/動画の公開権限の範囲を指定します。
+     * 写真の公開権限の範囲を指定します。
      * 'net'(デフォルト), 'everyone', 'all', 'user_group'の4種類あります。
      * それぞれ次を意味します。
      * 'net': インターネット
      * 'everyone': フォト蔵全体
      * 'all': 友達全員
-     * 'user_group': ユーザーグループ 
+     * 'user_group': ユーザーグループ
      *
-     * perm_id
-     * 'perm_type2'が'user_group'の場合にのみ有効な値です。
-     * ユーザーグループIDを指定します。 
+     * perm_user_id
+     * 'perm_type2' が 'user_group' の場合だけ有効な値です。
+     * 公開する友達のユーザーIDを指定します。
+     * 複数の友達のユーザーIDを指定する場合は、スペース区切りで指定してください。
      *
      * order_type
-     * 写真/動画の並び順です。次の値があります。
+     * 写真の並び順です。次の値があります。
      * 'upload'(デフォルト): アップロード順
      * 'date': 日付順
      * 'comment': コメント順
      * 'file_name': ファイル名順
-     * 値の後に'2'がつくと(例: upload2)逆順になります。 
+     * 値の後に'2'がつくと(例: upload2)逆順になります。
      *
      * copyright_type
      * 著作権タイプを指定します。 'normal'(デフォルト),
      * 'creativecommons'の2種類があります。
      * クリエイティブコモンズによる著作権を設定したい場合に
-     * 'creativecommons'を指定して下さい。 
+     * 'creativecommons'を指定して下さい。
      *
      * copyright_commercial
      * クリエイティブコモンズによる著作権、営利目的での利用を指定します。
      * 'yes'(デフォルト), 'no'の2種類を指定できます。
-     * 'yes'の場合は利用を許可、'no'の場合は利用を許可しません。 
+     * 'yes'の場合は利用を許可、'no'の場合は利用を許可しません。
      *
      * copyright_modification
      * クリエイティブコモンズによる著作権、改変の許可を指定します。
      * 'yes'(デフォルト), 'no', 'share'の3種類を指定できます。
      * 'yes'の場合は改変を許可、'no'の場合は改変を許可しません。
-     * 'share'の場合は他の人が同一条件化で配付する場合のみ変更を許可します。 
+     * 'share'の場合は他の人が同一条件化で配付する場合のみ変更を許可します。
      *
      */
     public function photo_add_album($params)
     {
-        $tags = array("album_id");
+        $tags = array('album_id');
 
-        $xml = $this->callMethod("photo_add_album", $params, "post");
+        $xml = $this->callMethod('photo_add_album', $params, 'post');
 
         return self::parseXML($xml, $tags);
     }
@@ -374,7 +383,7 @@ class Services_Photozou
      */
     public function photo_edit_album($params)
     {
-        $xml = $this->callMethod("photo_edit_album", $params, "post");
+        $xml = $this->callMethod('photo_edit_album', $params, 'post');
         return self::parseXML($xml, array());
     }
 
@@ -525,6 +534,7 @@ class Services_Photozou
     /**
      * user_group
      *
+     * 友達グループの一覧を取得します。
      */
     public function user_group()
     {
@@ -536,7 +546,13 @@ class Services_Photozou
 
         $xml = $this->callMethod("user_group", array(), "get");
 
-        return self::parseXML($xml, $tags);
+        $result = [];
+        $match = self::getBlock($xml, 'user_group');
+        foreach ($match as $item) {
+            $result[] = self::parseXML($item, $tags);
+        }
+
+        return $result;
     }
 
     /**
@@ -629,9 +645,9 @@ class Services_Photozou
     /**
      * parseXML
      */
-    private static function parseXML($xml, $parse_param)
+    private static function parseXML($xml, array $parse_param)
     {
-        $result = array();
+        $result = [];
         $xml = str_replace("\n", '', $xml);
         foreach ($parse_param as $key) {
             $pattern = "|<{$key}>(.*?)</{$key}>|";
