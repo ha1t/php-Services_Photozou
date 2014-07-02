@@ -105,7 +105,7 @@ class Services_Photozou
      */
     private function callMethod($method_name, array $send_param = [], $method = 'post')
     {
-        $client = new GuzzleHttp\Client([
+        $client = new \GuzzleHttp\Client([
             'base_url' => self::API_URL,
             'defaults' => [
                 'auth'    => [$this->username, $this->password],
@@ -117,6 +117,7 @@ class Services_Photozou
         } elseif ($method == 'post') {
             if (isset($send_param['photo']) && $method_name == "photo_add") {
                 $request->addFile('photo', $send_param['photo'], self::getMime($send_param['photo']));
+                $send_param['photo'] = \GuzzleHttp\Post\PostFile('photo', file_get_contents($send_param['photo']), $send_param['photo']);
             }
 
             $response = $client->post($method_name, $send_param);
@@ -503,7 +504,7 @@ class Services_Photozou
      * user_info
      *
      */
-    public function user_info(array $param)
+    public function user_info($param)
     {
         $result = array();
         $tags = array(
