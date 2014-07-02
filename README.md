@@ -2,6 +2,14 @@
 
 ## Changes
 
+### 2014-07-02
+
+- v2.0.0
+-- HTTP_Requestを廃止
+-- Guzzleを利用
+-- composer対応
+-- PHP4記法の廃止
+
 ### 2012-04-27
 
 * v1.4.1
