@@ -104,6 +104,7 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
         $result = $photozou->user_info(array('user_id' => '2'));
         $this->assertEquals($result['profile_url'], 'http://photozou.jp/user/top/2');
 
+        // ユーザーidを直接指定する事もできる
         $result = $photozou->user_info(2);
         $this->assertEquals($result['profile_url'], 'http://photozou.jp/user/top/2');
     }
