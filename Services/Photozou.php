@@ -13,8 +13,12 @@
 class Services_Photozou
 {
     const API_URL = 'http://api.photozou.jp/rest/';
+
     private $username;
     private $password;
+
+    /** @var \GuzzleHttp\Client */
+    private $client;
 
     /**
      * @see http://photozou.jp/basic/api_error
@@ -44,6 +48,12 @@ class Services_Photozou
     {
         $this->username = $username;
         $this->password = $password;
+        $this->client = new \GuzzleHttp\Client([
+            'base_url' => self::API_URL,
+            'defaults' => [
+                'auth'    => [$this->username, $this->password],
+            ]
+        ]);
     }
 
     /**
@@ -56,21 +66,18 @@ class Services_Photozou
      */
     private function callMethod($method_name, array $send_param = [], $method = 'post')
     {
-        $client = new \GuzzleHttp\Client([
-            'base_url' => self::API_URL,
-            'defaults' => [
-                'auth'    => [$this->username, $this->password],
-            ]
-        ]);
-
         if ($method == 'get') {
-            $response = $client->get($method_name, ['query' => $send_param]);
+            $response = $this->client->get($method_name, ['query' => $send_param]);
         } elseif ($method == 'post') {
             if (isset($send_param['photo']) && $method_name == "photo_add") {
-                $send_param['photo'] = new \GuzzleHttp\Post\PostFile('photo', fopen($send_param['photo'], 'r'), $send_param['photo']);
+                $send_param['photo'] = new \GuzzleHttp\Post\PostFile(
+                    'photo',
+                    fopen($send_param['photo'], 'r'),
+                    $send_param['photo']
+                );
             }
 
-            $response = $client->post($method_name, ['body' => $send_param]);
+            $response = $this->client->post($method_name, ['body' => $send_param]);
         }
 
         $xml = (string)$response->getBody();
