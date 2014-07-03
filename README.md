@@ -2,13 +2,18 @@
 
 ## Changes
 
+### 2014-07-03
+
+- v2.1.0
+    - TravisCIでモックを使ってテストが動くように
+
 ### 2014-07-02
 
 - v2.0.0
--- HTTP_Requestを廃止
--- Guzzleを利用
--- composer対応
--- PHP4記法の廃止
+    - HTTP_Requestを廃止
+    - Guzzleを利用
+    - composer対応
+    - PHP4記法の廃止
 
 ### 2012-04-27
 
