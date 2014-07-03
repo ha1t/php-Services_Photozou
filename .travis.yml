@@ -1,5 +1,10 @@
 language: php
+
 php:
   - 5.4
   - 5.5
-script: find . -type f -name *.php | xargs -n1 php -l
+
+script:
+  - find . -type f -name *.php | xargs -n1 php -l
+  - phpunit --coverage-text -c ./tests/phpunit.xml
+

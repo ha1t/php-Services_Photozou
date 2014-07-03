@@ -15,3 +15,4 @@ if (file_exists(dirname(__FILE__) . '/config_my.php')) {
     require 'config_my.php';
 }
 
+// $_SERVER['CI'] = true;
