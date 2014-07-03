@@ -10,38 +10,6 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
         $this->password = $password;
     }
 
-    public function testGetFileExt()
-    {
-        $ref = new ReflectionMethod('Services_Photozou', 'getFileExt');
-        $ref->setAccessible(true);
-        $photozou = new Services_Photozou($this->user, $this->password);
-        $test_words = array(
-            'test.jpg',
-            'test.jpg.jpg',
-            'a/b/c.jpg',
-            '__r__.jpg',
-        );
-
-        foreach ($test_words as $word) {
-            $this->assertEquals('jpg', $ref->invoke($photozou, $word));
-        }
-    }
-
-    public function testGetMime()
-    {
-        $ref = new ReflectionMethod('Services_Photozou', 'getMime');
-        $ref->setAccessible(true);
-        $photozou = new Services_Photozou($this->user, $this->password);
-
-        $this->assertEquals('image/gif', $ref->invoke($photozou, 'hoge'));
-        $this->assertEquals('image/gif', $ref->invoke($photozou, 'hoge.gif'));
-        $this->assertEquals('image/jpeg', $ref->invoke($photozou, 'hoge.jpg'));
-        $this->assertEquals('image/jpeg', $ref->invoke($photozou, 'hoge.jpeg'));
-        $this->assertEquals('image/pjpeg', $ref->invoke($photozou, 'hoge.pjpeg'));
-        $this->assertEquals('image/png', $ref->invoke($photozou, 'hoge.png'));
-        $this->assertEquals('image/x-png', $ref->invoke($photozou, 'hoge.x-png'));
-    }
-
     public function testNop()
     {
         $photozou = new Services_Photozou($this->user, $this->password);
