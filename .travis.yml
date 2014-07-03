@@ -5,7 +5,7 @@ php:
   - 5.5
 
 before_script:
-  - php composer.phar install --dev --no-interaction
+  - composer install --dev
 
 script:
   - find . -type f -name *.php | xargs -n1 php -l
