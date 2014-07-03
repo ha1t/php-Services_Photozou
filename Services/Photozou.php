@@ -46,53 +46,6 @@ class Services_Photozou
         $this->password = $password;
     }
 
-    private static function getFileExt($filename)
-    {
-        $ext = "";
-        $filename = basename($filename);
-        $len = strlen($filename);
-        $len--;
-        while ($len >= 0) {
-            if ($filename{$len} != '.') {
-                $ext = $ext . $filename{$len};
-            } else {
-                break;
-            }
-            $len--;
-        }
-        $ext = strtolower(strrev($ext));
-        return $ext;
-    }
-
-    private static function getMime($filename)
-    {
-        $ext = self::getFileExt($filename);
-        switch ($ext) {
-        case 'gif' :
-            $mime = 'image/gif';
-            break;
-        case 'jpg' :
-            $mime = 'image/jpeg';
-            break;
-        case 'jpeg' :
-            $mime = 'image/jpeg';
-            break;
-        case 'pjpeg' :
-            $mime = 'image/pjpeg';
-            break;
-        case 'png' :
-            $mime = 'image/png';
-            break;
-        case 'x-png' :
-            $mime = 'image/x-png';
-            break;
-        default:
-            $mime = 'image/gif';
-        }
-
-        return $mime;
-    }
-
     /**
      * callMethod
      *
