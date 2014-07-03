@@ -8,6 +8,5 @@ before_script:
   - composer install --dev
 
 script:
-  - find . -type f -name *.php | xargs -n1 php -l
   - phpunit --coverage-text -c ./tests/phpunit.xml
 
