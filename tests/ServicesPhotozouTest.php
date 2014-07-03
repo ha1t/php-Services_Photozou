@@ -13,8 +13,7 @@ class ServicesPhotozouTest extends PHPUnit_Framework_TestCase
     // ダミーリクエストを差し込む
     public function injectMock(Services_Photozou $photozou, $xml)
     {
-        if (!isset($_SERVER['CI']) || !$_SERVER['CI']) {
-            var_dump('ERRR', $_SERVER['CI']);exit;
+        if (!(isset($_SERVER['CI']) && $_SERVER['CI'] == true)) {
             return;
         }
 
