@@ -1,4 +1,7 @@
-# Services_Photozou [![Build Status](https://secure.travis-ci.org/ha1t/php-Services_Photozou.png?branch=master)](http://travis-ci.org/ha1t/php-Services_Photozou)
+# Services_Photozou
+
+[![Build Status](https://secure.travis-ci.org/ha1t/php-Services_Photozou.png?branch=master)](http://travis-ci.org/ha1t/php-Services_Photozou)
+[![Coverage Status](https://coveralls.io/repos/ha1t/php-Services_Photozou/badge.png?branch=use_coveralls)](https://coveralls.io/r/ha1t/php-Services_Photozou?branch=use_coveralls)
 
 ## Changes
 
