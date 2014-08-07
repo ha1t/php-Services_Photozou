@@ -8,5 +8,8 @@ before_script:
   - composer install --dev
 
 script:
-  - phpunit --coverage-text -c ./tests/phpunit.xml
+  - mkdir -p build/logs
+  - phpunit -c ./tests/phpunit.xml --coverage-clover build/logs/clover.xml
 
+after_script:
+  - php vendor/bin/coveralls -v -c .coveralls.yml
