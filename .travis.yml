@@ -8,5 +8,8 @@ before_script:
   - composer install --dev
 
 script:
+  - mkdir -p build/logs
   - phpunit --coverage-text -c ./tests/phpunit.xml
 
+after_script:
+  - php vendor/bin/coveralls -v -c .coveralls.yml
